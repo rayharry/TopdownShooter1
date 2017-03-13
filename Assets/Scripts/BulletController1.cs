@@ -41,8 +41,13 @@ public class BulletController1 : MonoBehaviour {
 		if(other.gameObject.tag == "Enemy")
 		{
 			// Search the enemy health manager component, then use the hurt enemy script with set damage.
-
 			other.gameObject.GetComponent<EnemyHealthManager>().HurtEnemy(damageToGive);
+			Destroy(gameObject);
+		}
+
+		if(other.gameObject.tag == "Obstacle")
+		{
+			// Bullet hits the wall and is destroyed.
 			Destroy(gameObject);
 		}
 	}

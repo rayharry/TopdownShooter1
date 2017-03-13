@@ -20,10 +20,14 @@ public class PlayerController : MonoBehaviour {
 	public float shake;
 	public float shakeAmount;
 	public float decreaseFactor;
+	public bool cameraShake;
 
 	public GunController theGun;
 
 	public bool useController;
+	public bool running;
+	public float jumpCooldown;
+	public float jumpThrust;
 
 	public Teleporter teleportier;
 	public Teleporter2 teleportier2;
@@ -46,14 +50,13 @@ public class PlayerController : MonoBehaviour {
 			Application.Quit();
 		}
 
-		// Setting the position for the camera
-
-		if(shake < 0) {
-			mainCamera.transform.position = new Vector3(transform.position.x + shakeAmount,17,transform.position.z + shakeAmount);
-			shake -= Time.deltaTime * decreaseFactor;
+		// Setting the position for the camera with and without the screenshake.
+		if(cameraShake) {
+			mainCamera.transform.position = new Vector3((transform.position.x - shakeAmount) + Random.Range(0, shakeAmount * 2),transform.position.y +  15,((transform.position.z - shakeAmount) + Random.Range(0, shakeAmount * 2))-4);
+			//shake -= Time.deltaTime * decreaseFactor;
 		}
 
-		else {
+		if(!cameraShake) {
 			mainCamera.transform.position = new Vector3(transform.position.x,transform.position.y + 15,transform.position.z - 4);
 		}
 
@@ -61,7 +64,15 @@ public class PlayerController : MonoBehaviour {
 		// Moving around with the traditional keys
 
 		moveInput = new Vector3(Input.GetAxisRaw("Horizontal"), 0f, Input.GetAxisRaw("Vertical"));
-		moveVelocity = moveInput * moveSpeed;
+
+		// Setting running controls
+		if(running) {
+			moveVelocity = moveInput * moveSpeed * 1.5f;
+		}
+
+		if(!running) {
+			moveVelocity = moveInput * moveSpeed;
+		}
 
 
 		// Ray is a beam coming out of a point. The plane is a mathematical plane, not a physical object in the gameworld.
@@ -81,15 +92,60 @@ public class PlayerController : MonoBehaviour {
 				transform.LookAt(new Vector3(pointToLook.x, transform.position.y, pointToLook.z));
 			}
 
-
-			// Mouse button 0 is left, 1 is right, 2 is middle. Includes TEST function for OR operator.
-
-			if(Input.GetMouseButtonDown(0) || (Input.GetKeyDown("k")))  
+			// Mouse button 0 is left, 1 is right, 2 is middle. 
+			if(Input.GetAxis("Fire1") > 0)  
 				theGun.isFiring = true;
 			              
-			if(Input.GetMouseButtonUp(0) || (Input.GetKeyUp("k")))
+			if(Input.GetAxis("Fire1") <= 0)  
 				theGun.isFiring = false;
 
+			// Running controls
+			if (Input.GetAxis("Run") > 0)
+			{
+				running = true;
+			}
+
+			if (Input.GetAxis("Run") <= 0)
+			{
+				running = false;
+			}
+
+			// Jumping controls
+			if (Input.GetAxis("Jump") > 0 && jumpCooldown <= 0 && Input.GetAxis("Jetpack") <= 0)
+			{
+				transform.position = new Vector3(transform.position.x,transform.position.y + 0.5f,transform.position.z);
+				jumpThrust += 1f;
+				jumpCooldown += 0.8f;
+			}
+
+			if (jumpThrust > 0)
+			{
+				transform.position = new Vector3(transform.position.x,transform.position.y + 0.4f,transform.position.z);
+				jumpThrust -= Time.deltaTime * 7;
+			}
+
+			if (jumpCooldown > 0)
+			{
+				jumpCooldown -= Time.deltaTime;
+			}
+
+			// Jumping controls
+			if (Input.GetAxis("Jetpack") > 0)
+			{
+				transform.position = new Vector3(transform.position.x,transform.position.y + 0.3f,transform.position.z);
+			}
+		}
+
+
+		// Includes the Shake amount set for camera.
+		if(theGun.isFiring)
+		{
+			cameraShake = true;
+		}
+
+		if(!theGun.isFiring)
+		{
+			cameraShake = false;
 		}
 
 
@@ -126,19 +182,16 @@ public class PlayerController : MonoBehaviour {
 			transform.position = new Vector3(teleportier2.transform.position.x - 6, teleportier2.transform.position.y-1, teleportier2.transform.position.z);
 		}
 
-
 		// Collider event for the teleport two
 		if (other.gameObject.tag == "Teleport2" && transform.position.x < teleportier2.transform.position.x)
 		{
 			transform.position = new Vector3(teleportier.transform.position.x + 3, teleportier.transform.position.y -1, teleportier.transform.position.z);
 		}
 
-
 		if (other.gameObject.tag == "Teleport" && transform.position.x > teleportier.transform.position.x)
 		{
 			transform.position = new Vector3(teleportier2.transform.position.x - 3, teleportier2.transform.position.y-1, teleportier2.transform.position.z);
 		}
-
 
 		// Collider event for the teleport two
 		if (other.gameObject.tag == "Teleport2" && transform.position.x > teleportier2.transform.position.x)
@@ -147,6 +200,14 @@ public class PlayerController : MonoBehaviour {
 		}
 	}
 
+	public void OnTriggerStay(Collider other)
+	{
+		// When player hits the gravlift, it transports player into the air. CURRENTLY NOT USED.
+		if (other.gameObject.tag == "Gravlift")
+		{
+			transform.position = new Vector3(transform.position.x,transform.position.y + 0.1f,transform.position.z);
+		}
+	}
 
 	void FixedUpdate() {
 		// Speed of the body

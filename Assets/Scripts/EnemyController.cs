@@ -9,12 +9,13 @@ public class EnemyController : MonoBehaviour {
 	public float moveSpeed;
 
 	public PlayerController thePlayer;
-	//public PlayerHealthManager hurtyPlayer;
 
 	public Slider healthbar;
 
 	public Teleporter teleportier;
 	public Teleporter2 teleportier2;
+
+	public bool randomStart;
 
 	// Use this for initialization
 	void Start () {
@@ -28,9 +29,11 @@ public class EnemyController : MonoBehaviour {
 		// Search for an object in the gameworld, which has the Playercontroller attached to it. 
 		thePlayer = FindObjectOfType<PlayerController>();
 
-		// Randomly puts the zombies in new positions at the start of frame.
-		transform.position = new Vector3(Random.Range(-40f, 40f), 1f, Random.Range(-20f, 30f));
-
+		// Randomly puts the zombies in new positions at the start of frame, if the tag is on.
+		if (randomStart)
+		{
+			transform.position = new Vector3(Random.Range(-40f, 40f), 1f, Random.Range(-20f, 30f));
+		}
 	}
 
 
@@ -50,9 +53,9 @@ public class EnemyController : MonoBehaviour {
 
 		// Every object in the gameworld has the Transform column of info. From there we look at the position.
 		// If you have more 3D, flying enemies etc you would also use the rotation to actually look at the player. 
-		// Zombie doesn't look at player, if he's gone.
+		// Zombie doesn't look at player now, if his life is lower or equal to zero.
 
-		if (healthbar.value >= 1 && thePlayer.transform.position.y < myRB.transform.position.y + 2 && thePlayer.transform.position.y > myRB.transform.position.y - 2)
+		if (healthbar.value >= 1 && thePlayer.transform.position.y < myRB.transform.position.y + 0.5 && thePlayer.transform.position.y > myRB.transform.position.y - 0.1 )
 		{
 			transform.LookAt(thePlayer.transform.position);
 		}
@@ -63,13 +66,13 @@ public class EnemyController : MonoBehaviour {
 		// Collider event for the teleport one
 		if (other.gameObject.tag == "Teleport")
 		{
-			transform.position = new Vector3(teleportier2.transform.position.x - 6, teleportier2.transform.position.y - 1, teleportier2.transform.position.z);
+			transform.position = new Vector3(teleportier2.transform.position.x - 6, teleportier2.transform.position.y - 3, teleportier2.transform.position.z);
 		}
 
 		// Collider event for the teleport two
 		if (other.gameObject.tag == "Teleport2")
 		{
-			transform.position = new Vector3(teleportier.transform.position.x + 3, teleportier.transform.position.y - 1, teleportier.transform.position.z);
+			transform.position = new Vector3(teleportier.transform.position.x + 3, teleportier.transform.position.y - 3, teleportier.transform.position.z);
 		}
 	}
 }
